@@ -8,9 +8,9 @@ const generateAccountNumber = () => {
 };
 
 export const signUpUser = createAsyncThunk("auth/signUpUser", async (userData) => {
-  const {first_name, last_name, email, password, role, account_balance} = userData;
+  const {first_name, last_name, email, password, role, account_balance, currency} = userData;
   const account_number = generateAccountNumber();
-  const {data, error} = await supabase.from("users").insert([{first_name, last_name, email, password, role, account_number, account_balance}]);
+  const {data, error} = await supabase.from("users").insert([{first_name, last_name, email, password, role, account_number, account_balance, currency}]);
 
   if (error) {
     console.log("errr", error);

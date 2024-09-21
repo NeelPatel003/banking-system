@@ -1,4 +1,4 @@
-import {useState} from "react";
+import { useState } from "react";
 
 // material-ui
 import Button from "@mui/material/Button";
@@ -12,7 +12,7 @@ import Stack from "@mui/material/Stack";
 
 // third party
 import * as Yup from "yup";
-import {Formik} from "formik";
+import { Formik } from "formik";
 
 // project import
 import AnimateButton from "components/@extended/AnimateButton";
@@ -20,10 +20,11 @@ import AnimateButton from "components/@extended/AnimateButton";
 // assets
 import EyeOutlined from "@ant-design/icons/EyeOutlined";
 import EyeInvisibleOutlined from "@ant-design/icons/EyeInvisibleOutlined";
-import {useNavigate} from "react-router";
-import {useDispatch} from "react-redux";
-import {signUpUser} from "redux/slices/authSlice";
-import {toast} from "react-toastify";
+import { useNavigate } from "react-router";
+import { useDispatch } from "react-redux";
+import { signUpUser } from "redux/slices/authSlice";
+import { toast } from "react-toastify";
+import { MenuItem, Select } from "@mui/material";
 
 // ============================|| JWT - REGISTER ||============================ //
 
@@ -55,7 +56,7 @@ export default function AuthRegister() {
           email: Yup.string().email("Must be a valid email").max(255).required("Email is required"),
           password: Yup.string().max(255).required("Password is required")
         })}
-        onSubmit={(data) => {
+        onSubmit={async (data) => {
           const role = data.email === "test@gmail.com" && data.password === "123456" ? "admin" : "user";
           const params = {
             first_name: data.firstname,
@@ -63,16 +64,17 @@ export default function AuthRegister() {
             email: data.email,
             password: data.password,
             role: role,
-            account_balance: 0
+            account_balance: 0,
+            currency: data.currency
           };
-          const res = dispatch(signUpUser(params));
-          if (res?.payload?.length) {
-            toast.success("Register Successfully");
-            navigate("/"); // Navigate to desired page on success
-          }
+          await dispatch(signUpUser(params));
+
+          await toast.success("Register Successfully");
+          await navigate("/login"); // Navigate to desired page on success
+
         }}
       >
-        {({errors, handleBlur, handleChange, handleSubmit, isSubmitting, touched, values}) => (
+        {({ errors, handleBlur, handleChange, handleSubmit, isSubmitting, touched, values }) => (
           <form noValidate onSubmit={handleSubmit}>
             <Grid container spacing={3}>
               <Grid item xs={12} md={6}>
@@ -85,7 +87,7 @@ export default function AuthRegister() {
                     name="firstname"
                     onBlur={handleBlur}
                     onChange={handleChange}
-                    placeholder="John"
+                    placeholder="First Name"
                     fullWidth
                     error={Boolean(touched.firstname && errors.firstname)}
                   />
@@ -108,7 +110,7 @@ export default function AuthRegister() {
                     name="lastname"
                     onBlur={handleBlur}
                     onChange={handleChange}
-                    placeholder="Doe"
+                    placeholder="Last Name"
                     inputProps={{}}
                   />
                 </Stack>
@@ -130,7 +132,7 @@ export default function AuthRegister() {
                     name="email"
                     onBlur={handleBlur}
                     onChange={handleChange}
-                    placeholder="demo@company.com"
+                    placeholder="Email"
                     inputProps={{}}
                   />
                 </Stack>
@@ -174,6 +176,31 @@ export default function AuthRegister() {
                 {touched.password && errors.password && (
                   <FormHelperText error id="helper-text-password-signup">
                     {errors.password}
+                  </FormHelperText>
+                )}
+              </Grid>
+
+              <Grid item xs={12}>
+                <Stack spacing={1}>
+                  <InputLabel htmlFor="amount-login">Currency</InputLabel>
+                  <Select
+                    labelId="demo-simple-select-label"
+                    id="demo-simple-select"
+                    onBlur={handleBlur}
+                    value={values.currency}
+                    label="Currency"
+                    name="currency"
+                    onChange={handleChange}
+                    placeholder="Select Currency"
+                  >
+                    <MenuItem value={"USD"}>USD</MenuItem>
+                    <MenuItem value={"GBP"}>GBP</MenuItem>
+                    <MenuItem value={"EUR"}>EUR</MenuItem>
+                  </Select>
+                </Stack>
+                {touched.currency && errors.currency && (
+                  <FormHelperText error id="standard-weight-helper-text-password-login">
+                    {errors.currency}
                   </FormHelperText>
                 )}
               </Grid>

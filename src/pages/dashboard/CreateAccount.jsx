@@ -24,6 +24,7 @@ import {useDispatch} from "react-redux";
 import {signUpUser} from "redux/slices/authSlice";
 import {toast} from "react-toastify";
 import {fetchUsers} from "redux/slices/userSlice";
+import { MenuItem, Select } from "@mui/material";
 
 // ============================|| JWT - REGISTER ||============================ //
 
@@ -62,7 +63,8 @@ export default function CreateAccount() {
             email: data.email,
             password: data.password,
             role: role,
-            account_balance: 0
+            account_balance: 0,
+            currency: data.currency
           };
           await dispatch(signUpUser(params));
           await dispatch(fetchUsers());
@@ -84,7 +86,7 @@ export default function CreateAccount() {
                     name="firstname"
                     onBlur={handleBlur}
                     onChange={handleChange}
-                    placeholder="John"
+                    placeholder="First Name"
                     fullWidth
                     error={Boolean(touched.firstname && errors.firstname)}
                   />
@@ -107,7 +109,7 @@ export default function CreateAccount() {
                     name="lastname"
                     onBlur={handleBlur}
                     onChange={handleChange}
-                    placeholder="Doe"
+                    placeholder="Last Name"
                     inputProps={{}}
                   />
                 </Stack>
@@ -129,7 +131,7 @@ export default function CreateAccount() {
                     name="email"
                     onBlur={handleBlur}
                     onChange={handleChange}
-                    placeholder="demo@company.com"
+                    placeholder="Email"
                     inputProps={{}}
                   />
                 </Stack>
@@ -173,6 +175,31 @@ export default function CreateAccount() {
                 {touched.password && errors.password && (
                   <FormHelperText error id="helper-text-password-signup">
                     {errors.password}
+                  </FormHelperText>
+                )}
+              </Grid>
+
+              <Grid item xs={12}>
+                <Stack spacing={1}>
+                  <InputLabel htmlFor="amount-login">Currency</InputLabel>
+                  <Select
+                    labelId="demo-simple-select-label"
+                    id="demo-simple-select"
+                    onBlur={handleBlur}
+                    value={values.currency}
+                    label="Currency"
+                    name="currency"
+                    onChange={handleChange}
+                    placeholder="Select Currency"
+                  >
+                    <MenuItem value={"USD"}>USD</MenuItem>
+                    <MenuItem value={"GBP"}>GBP</MenuItem>
+                    <MenuItem value={"EUR"}>EUR</MenuItem>
+                  </Select>
+                </Stack>
+                {touched.currency && errors.currency && (
+                  <FormHelperText error id="standard-weight-helper-text-password-login">
+                    {errors.currency}
                   </FormHelperText>
                 )}
               </Grid>

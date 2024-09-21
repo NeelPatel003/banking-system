@@ -180,9 +180,9 @@ export default function UserDetails() {
                         <MenuItem value={"EUR"}>EUR</MenuItem>
                       </Select>
                     </Stack>
-                    {touched.amount && errors.amount && (
+                    {touched.currency && errors.currency && (
                       <FormHelperText error id="standard-weight-helper-text-password-login">
-                        {errors.amount}
+                        {errors.currency}
                       </FormHelperText>
                     )}
                   </Grid>
