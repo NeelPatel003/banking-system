@@ -65,6 +65,12 @@ export default function DashboardDefault() {
       label: "role"
     },
     {
+      id: "currency",
+      align: "left",
+      disablePadding: false,
+      label: "Currency"
+    },
+    {
       id: "account_balance",
       align: "right",
       disablePadding: false,

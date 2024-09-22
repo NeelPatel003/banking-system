@@ -8,7 +8,6 @@ import TableContainer from "@mui/material/TableContainer";
 import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
 import Box from "@mui/material/Box";
-import {useNavigate} from "react-router";
 
 // ==============================|| ORDER TABLE - HEADER ||============================== //
 
@@ -29,12 +28,7 @@ function OrderTableHead({columns}) {
 
 // ==============================|| ORDER TABLE ||============================== //
 // eslint-disable-next-line react/prop-types
-export default function OrderTable({data, columns}) {
-  const navigate = useNavigate();
-  const handleGetUserDetails = (id) => {
-    navigate(`/userDetails/${id}`);
-  };
-
+export default function TransactionHistoryTable({data, columns}) {
   return (
     <Box>
       <TableContainer
@@ -61,18 +55,16 @@ export default function OrderTable({data, columns}) {
                     sx={{"&:last-child td, &:last-child th": {border: 0}}}
                     tabIndex={-1}
                     key={row?.id}
-                    onClick={() => handleGetUserDetails(row?.id)}
                   >
                     <TableCell component="th" id={labelId} scope="row">
                       <Link color="secondary"> {index + 1}</Link>
                     </TableCell>
-                    <TableCell>{row?.first_name}</TableCell>
-                    <TableCell align="left">{row?.last_name}</TableCell>
-                    <TableCell>{row?.email}</TableCell>
-                    <TableCell>{row?.role}</TableCell>
-                    <TableCell align="left">{row?.currency}</TableCell>
-                    <TableCell align="right">{row?.account_balance}</TableCell>
-                    <TableCell align="right">{row?.account_number}</TableCell>
+                    <TableCell>{row?.description}</TableCell>
+                    <TableCell align="left">{row?.transaction_type}</TableCell>
+                    <TableCell align="right">{row?.amount}</TableCell>
+                    <TableCell>{row?.currency}</TableCell>
+                    <TableCell align="right">{row?.total_balance}</TableCell>
+                    <TableCell align="right">{row?.timestamp}</TableCell>
                   </TableRow>
                 );
               })

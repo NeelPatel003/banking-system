@@ -11,7 +11,7 @@ import Stack from "@mui/material/Stack";
 import MainCard from "components/MainCard";
 import {useDispatch, useSelector} from "react-redux";
 import {useEffect} from "react";
-import {fetchUserById, foundTransfer} from "redux/slices/userSlice";
+import {fetchUserById, fetchUserTransactionHistory, foundTransfer} from "redux/slices/userSlice";
 import Loader from "components/Loader";
 import OrderTable from "pages/dashboard/OrdersTable";
 import {useParams} from "react-router-dom";
@@ -21,16 +21,23 @@ import AnimateButton from "components/@extended/AnimateButton";
 import * as Yup from "yup";
 import {Formik} from "formik";
 import {MenuItem, Select} from "@mui/material";
+import TransactionHistoryTable from "./TransactionHistoryTable";
 
 export default function UserDetails() {
   const dispatch = useDispatch();
   const {id} = useParams();
   console.log("id", id);
-  const {user, loading, error} = useSelector((state) => state.users);
+  const {transactionHistory,user, loading, error} = useSelector((state) => state.users);
+
 
   useEffect(() => {
-    dispatch(fetchUserById(id));
+    async function fetchData() {
+      await dispatch(fetchUserById(id));
+    await dispatch(fetchUserTransactionHistory(id));
+    }
+    fetchData();
   }, [dispatch, id]);
+
 
   const columns = [
     {
@@ -64,6 +71,12 @@ export default function UserDetails() {
       label: "role"
     },
     {
+      id: "currency",
+      align: "left",
+      disablePadding: false,
+      label: "Currency"
+    },
+    {
       id: "account_balance",
       align: "right",
       disablePadding: false,
@@ -77,6 +90,51 @@ export default function UserDetails() {
     }
   ];
 
+
+  const transactionHistoryColumns = [
+    {
+      id: "No",
+      align: "left",
+      disablePadding: false,
+      label: "Sr. No"
+    },
+    {
+      id: "Description",
+      align: "left",
+      disablePadding: true,
+      label: "Description"
+    },
+    {
+      id: "transaction_type",
+      align: "left",
+      disablePadding: false,
+      label: "Type"
+    },
+    {
+      id: "amount",
+      align: "left",
+      disablePadding: false,
+      label: "Amount"
+    },
+    {
+      id: "currency",
+      align: "left",
+      disablePadding: false,
+      label: "Currency"
+    },
+    {
+      id: "total_balance",
+      align: "right",
+      disablePadding: false,
+      label: "Total Balance"
+    },
+    {
+      id: "timestamp",
+      align: "right",
+      disablePadding: false,
+      label: "Time Stamp"
+    }
+  ];
   return (
     <Grid container rowSpacing={4.5} columnSpacing={2.75}>
       {/* row 1 */}
@@ -95,6 +153,19 @@ export default function UserDetails() {
           <OrderTable data={[user]} columns={columns} />
         </MainCard>
       </Grid>
+
+      <Grid item xs={12} md={7} lg={8}>
+        <Grid container alignItems="center" justifyContent="space-between">
+          <Grid item>
+            <Typography variant="h5">Transaction History</Typography>
+          </Grid>
+          <Grid item />
+        </Grid>
+        <MainCard sx={{mt: 2}} content={false}>
+          <TransactionHistoryTable data={transactionHistory} columns={transactionHistoryColumns} />
+        </MainCard>
+      </Grid>
+
       <Grid item xs={12} md={7} lg={4}>
         <Grid spacing={3}>
           <Formik
@@ -107,13 +178,16 @@ export default function UserDetails() {
               account_number: Yup.string().max(8).required("Recipient Account Number"),
               amount: Yup.string().max(9).required("Amount is required")
             })}
-            onSubmit={async (data) => {
+            onSubmit={async (data, { resetForm, setSubmitting }) => {
               const params = {
                 ...data,
                 id: id
               };
               await dispatch(foundTransfer(params));
               await dispatch(fetchUserById(id));
+              await dispatch(fetchUserTransactionHistory(id));
+              resetForm()
+              setSubmitting(false)
             }}
           >
             {({errors, handleBlur, handleChange, handleSubmit, isSubmitting, touched, values}) => (

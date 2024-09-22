@@ -55,14 +55,14 @@ export const foundTransfer = createAsyncThunk("user/foundTransfer", async (trans
     // Fetch recipient's current balance
     const {data: recipient, error: recipientFetchError} = await supabase
       .from("users")
-      .select("account_balance")
+      .select("*")
       .eq("account_number", transferData.account_number)
       .single();
 
     if (recipientFetchError || !recipient) {
-      toast.error("Error fetching recipient balance")
+      toast.error("Error fetching recipient balance+++")
       console.error("Error fetching recipient balance:", recipientFetchError);
-      throw recipientFetchError || new Error("Recipient not found");
+      throw recipientFetchError || new Error("Recipient not Funds");
     }
 
     const newRecipientBalance = parseInt(recipient.account_balance) + parseInt(transferData.amount);
@@ -91,7 +91,7 @@ export const foundTransfer = createAsyncThunk("user/foundTransfer", async (trans
     if (senderFetchError || !sender) {
       toast.error("Error fetching sender balance")
       console.error("Error fetching sender balance:", senderFetchError);
-      throw senderFetchError || new Error("Sender not found");
+      throw senderFetchError || new Error("Sender not Funds");
     }
 
 
@@ -118,20 +118,105 @@ export const foundTransfer = createAsyncThunk("user/foundTransfer", async (trans
 
     console.log("Sender balance updated:", updatedSender);
 
-    // Return the updated balances for both users
-    toast.success("Found Transfer Successfully");
-    return {updatedRecipient, updatedSender};
+
+      // Record the transaction for the recipient (Credit)
+    const { data: recipientTransaction, error: recipientTransactionError } = await supabase
+    .from("transaction_history")
+    .insert({
+      mainId: recipient.id,
+      sender_id: sender.id,
+      recipient_id: recipient.id,
+      amount: `${amountToCredit}`,  // Use "+" for credits
+      currency: transferData.currency,
+      transaction_type: 'credit',
+      description: `Funds received from ${sender.account_number}`,
+      total_balance: newRecipientBalance, // Store recipient's total balance
+      timestamp: new Date().toISOString(),
+    });
+
+  if (recipientTransactionError) {
+    console.error("Error recording recipient transaction:", recipientTransactionError);
+    throw recipientTransactionError;
+  }
+
+  // Record the transaction for the sender (Debit)
+  const { data: senderTransaction, error: senderTransactionError } = await supabase
+    .from("transaction_history")
+    .insert({
+      mainId: sender.id,
+      sender_id: sender.id,
+      recipient_id: recipient.id,
+      amount: `${transferData.amount}`,  // Use "-" for debits
+      currency: transferData.currency,
+      transaction_type: 'debit',
+      description: `Funds sent to ${recipient.account_number}`,
+      total_balance: newSenderBalance,  // Store sender's total balance
+      timestamp: new Date().toISOString(),
+    });
+
+  if (senderTransactionError) {
+    console.error("Error recording sender transaction:", senderTransactionError);
+    throw senderTransactionError;
+  }
+
+  toast.success("Funds Transfer Successfully");
+  return { updatedRecipient, updatedSender, recipientTransaction, senderTransaction };
+
   } catch (error) {
     console.error("Error during fund transfer:", error);
     throw error; // Ensure the error is caught by createAsyncThunk
   }
 });
 
+
+export const fetchUserTransactionHistory = createAsyncThunk(
+  "user/fetchUserTransactionHistory",
+  async (userId, { rejectWithValue }) => {
+    try {
+      const { data, error } = await supabase
+        .from("transaction_history")
+        .select("*")
+        .or(`mainId.eq.${userId}`)
+        .order('timestamp', { ascending: false }) // Fetch in descending order of time
+
+      if (error) {
+        console.error("Error fetching transaction history:", error);
+        return rejectWithValue(error.message);
+      }
+
+      // Ensure unique transactions by checking role
+      const filteredData = data.map(transaction => {
+        if (transaction.sender_id === userId) {
+          return {
+            ...transaction,
+            transaction_type: "debit",
+            amount: `-${transaction.amount}` // Debit transaction, show as negative
+          };
+        } else if (transaction.recipient_id === userId) {
+          return {
+            ...transaction,
+            transaction_type: "credit",
+            amount: `+${transaction.amount}` // Credit transaction, show as positive
+          };
+        }
+        return transaction;
+      });
+
+      return filteredData; // Return the processed data
+    } catch (error) {
+      console.error("Error in transaction history thunk:", error);
+      return rejectWithValue(error.message);
+    }
+  }
+);
+
+
 const userSlice = createSlice({
   name: "user",
   initialState: {
     users: [],
     user: null,
+    transactionHistory: [],
     loading: false,
     error: null
   },
@@ -178,6 +263,23 @@ const userSlice = createSlice({
         state.loading = false;
         state.error = action.error.message;
       });
+
+
+      // For fetchUserTransactionHistory
+
+      builder
+      .addCase(fetchUserTransactionHistory.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchUserTransactionHistory.fulfilled, (state, action) => {
+        state.loading = false;
+        state.transactionHistory = action.payload;
+      })
+      .addCase(fetchUserTransactionHistory.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
   }
 });
 
